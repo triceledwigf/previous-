@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract SimpleSmartContract {
+    uint256 public data;
+
+    event DataUpdated(uint256 newData);
+
+    // Constructor to set the initial data
+    constructor(uint256 initialData) {
+        data = initialData;
+    }
+
+    // Function to update data, onlyOwner modifier added for illustration purposes
+    function updateData(uint256 newData) public {
+        require(newData != data, "New data must be different from current data");
+        
+        // For illustration purposes: Add an access control mechanism (onlyOwner)
+        // Consider using OpenZeppelin's Ownable for more comprehensive access control
+        // address owner = msg.sender;
+        // require(owner == _getOwner(), "Only the owner can update the data");
+
+        data = newData;
+
+        emit DataUpdated(newData);
+    }
+
+    // Function to retrieve current data
+    function getData() external view returns (uint256) {
+        return data;
+    }
+
+    // For illustration purposes: Function to get the owner of the contract
+    // function _getOwner() internal view returns (address) {
+    //     return owner();
+    // }
+}
