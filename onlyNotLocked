@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract EnhancedStorageETH {
+    address public owner;
+    string public storedData;
+    uint256 public creationTimestamp;
+    bool public isLocked;
+
+    event DataStored(address indexed user, string data);
+    event DataDeleted(address indexed deleter);
+    event DataRevoked(address indexed revoker);
+    event ContributionReceived(address indexed contributor, uint256 amount);
+
+    struct Contribution {
+        uint256 timestamp;
+        uint256 amount;
+    }
+
+    mapping(address => Contribution[]) public contributions;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can call this function");
+        _;
+    }
+
+    modifier onlyNotLocked() {
+        require(!isLocked, "Contract is locked and data cannot be modified");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        creationTimestamp = block.timestamp;
+        isLocked = false;
+    }
+
+    function set(string memory newData) external onlyOwner onlyNotLocked {
+        storedData = newData;
+        emit DataStored(msg.sender, newData);
+    }
+
+    function get() external view returns (string memory) {
+        return storedData;
+    }
+
+    function deleteData() external onlyOwner onlyNotLocked {
+        delete storedData;
+        emit DataDeleted(msg.sender);
+    }
+
+    function lockContract() external onlyOwner {
+        isLocked = true;
+    }
+
+    function unlockContract() external onlyOwner {
+        isLocked = false;
+    }
+
+    function revokeData() external onlyOwner onlyNotLocked {
+        emit DataRevoked(msg.sender);
+        delete storedData;
+    }
+
+    receive() external payable {
+        recordContribution(msg.sender, msg.value);
+    }
+
+    function recordContribution(address contributor, uint256 amount) internal {
+        contributions[contributor].push(Contribution(block.timestamp, amount));
+        emit ContributionReceived(contributor, amount);
+    }
+
+    function getContributionsCount(address contributor) external view returns (uint256) {
+        return contributions[contributor].length;
+    }
+}
